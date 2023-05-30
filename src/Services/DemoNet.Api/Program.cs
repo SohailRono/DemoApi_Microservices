@@ -1,5 +1,6 @@
 using DemoNet.Api.Data;
 using DemoNet.Api.Interfaces;
+using DemoNet.Api.Mappings;
 using DemoNet.Api.Repositories;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<DemoDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnectionString") ?? throw new InvalidOperationException("Connection string 'DefaultConnectionString' not found.")));
 builder.Services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>));
+
+builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+builder.Services.AddAutoMapper(typeof(MappingProfile));
+
 builder.Services.AddScoped<ICustomerInfoRepository, CustomerInfoRepository>();
 
 builder.Services.AddControllers();
