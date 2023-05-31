@@ -5,6 +5,7 @@ using DemoNet.Api.Exceptions;
 using DemoNet.Api.Interfaces;
 using DemoNet.Api.Models.Entities;
 using DemoNet.Api.Models.VwModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
@@ -13,6 +14,7 @@ namespace DemoNet.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CustomerInfoesController : ControllerBase
     {
         private readonly ICustomerInfoRepository _repository;
@@ -27,7 +29,7 @@ namespace DemoNet.Api.Controllers
         }
 
         // GET: api/CustomerInfoes
-        [HttpGet]
+        [HttpGet, Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(IEnumerable<VmCustomerInfo>), (int)HttpStatusCode.OK)]
         //[ResponseCache(Duration =20)]
         public async Task<ActionResult<IEnumerable<VmCustomerInfo>>> GetCustomers()
