@@ -1,10 +1,14 @@
-﻿using DemoNet.Api.Models.Dtos;
+﻿using Azure.Core;
+using BCrypt.Net;
+using DemoNet.Api.Interfaces;
+using DemoNet.Api.Models.Dtos;
 using DemoNet.Api.Models.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using System.Text;
 
@@ -14,35 +18,46 @@ namespace DemoNet.Api.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        public static User user = new User();
+       private readonly IUserRepository _repository;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(IConfiguration configuration)
+        public AuthController(IConfiguration configuration, IUserRepository repository, ILogger<AuthController> logger)
         {
+            _repository = repository;
             _configuration = configuration;
+            _logger = logger;
         }
 
-        [HttpPost("register")]
-        public ActionResult<User> Register(UserDto request)
+        [HttpPost("Register")]
+        [ProducesResponseType(typeof(CustomerInfo), (int)HttpStatusCode.Created)]
+        public async Task<ActionResult<User>> Register([FromBody] User user)
         {
-            string passwordHash
-                = BCrypt.Net.BCrypt.HashPassword(request.Password);
-
-            user.Username = request.Username;
-            user.PasswordHash = passwordHash;
-
-            return Ok(user);
-        }
-
-        [HttpPost("login")]
-        public ActionResult<User> Login(UserDto request)
-        {
-            if (user.Username != request.Username)
+            var isExists = await _repository.CheckLogin(user.Email);
+            if (isExists == null)
             {
-                return BadRequest("User not found.");
+                _logger.LogInformation($"This {user.Email} already exists.");
+                return BadRequest($"This {user.Email} already exists.");
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+            user.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+            var newUser = await _repository.AddAsync(user);
+
+            _logger.LogInformation($"Customer {user.Id} is successfully created.");
+            return CreatedAtRoute(new { id = user.Id }, newUser);
+        }
+
+        [HttpPost("Login")]
+        [ProducesResponseType(typeof(UserDto), (int)HttpStatusCode.OK)]
+        public async Task<ActionResult<UserDto>> Login([FromBody] UserDto user)
+        {
+            var logedUser = await _repository.CheckLogin(user.Email);
+
+            if (logedUser == null)
+            {
+                return BadRequest("Invalid email");
+            }
+            if (!BCrypt.Net.BCrypt.Verify(user.Password, logedUser.Password))
             {
                 return BadRequest("Wrong password.");
             }
@@ -51,12 +66,11 @@ namespace DemoNet.Api.Controllers
 
             return Ok(token);
         }
-
-        private string CreateToken(User user)
+        private string CreateToken(UserDto user)
         {
             List<Claim> claims = new List<Claim> {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Email, user.Email),
+                new Claim(ClaimTypes.Role, "Admin"),
                
             };
 
@@ -75,6 +89,5 @@ namespace DemoNet.Api.Controllers
 
             return jwt;
         }
-
     }
 }

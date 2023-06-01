@@ -20,6 +20,7 @@ builder.Services.AddScoped(typeof(IAsyncRepository<>), typeof(RepositoryBase<>))
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<ICustomerInfoRepository, CustomerInfoRepository>();
 
 builder.Services.AddControllers();

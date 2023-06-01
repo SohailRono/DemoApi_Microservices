@@ -28,13 +28,15 @@ namespace DemoNet.Api.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(_mapper));
         }
 
-        // GET: api/CustomerInfoes
         [HttpGet, Authorize(Roles = "Admin")]
-        [ProducesResponseType(typeof(IEnumerable<VmCustomerInfo>), (int)HttpStatusCode.OK)]
-        //[ResponseCache(Duration =20)]
+        [ProducesResponseType(typeof(IEnumerable<VmCustomerInfo>), (int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<IEnumerable<VmCustomerInfo>>> GetCustomers()
         {
             var customers = await _repository.GetAllAsync();
+            if (customers == null)
+            {
+                return NotFound("No data found");
+            }
             return Ok(_mapper.Map<List<VmCustomerInfo>>(customers));
         }
 
@@ -85,9 +87,6 @@ namespace DemoNet.Api.Controllers
 
         [HttpDelete("{id}", Name = "DeleteCustomer")]
         [ProducesResponseType(typeof(CustomerInfo), (int)HttpStatusCode.NoContent)]
-        //[ProducesResponseType(StatusCodes.Status204NoContent)]
-        //[ProducesResponseType(StatusCodes.Status404NotFound)]
-        //[ProducesDefaultResponseType]
         public async Task<ActionResult> DeleteOrder(int id)
         {
             var customerToDelete = await _repository.GetByIdAsync(id);

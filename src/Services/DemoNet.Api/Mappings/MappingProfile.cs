@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using DemoNet.Api.Models.Dtos;
 using DemoNet.Api.Models.Entities;
 using DemoNet.Api.Models.VwModels;
 using static System.Runtime.InteropServices.JavaScript.JSType;
@@ -10,6 +11,7 @@ namespace DemoNet.Api.Mappings
         public MappingProfile()
         {
             CreateMap<CustomerInfo, VmCustomerInfo>().ReverseMap();
+            CreateMap<User, UserDto>().ReverseMap();
         }
     }
 }
