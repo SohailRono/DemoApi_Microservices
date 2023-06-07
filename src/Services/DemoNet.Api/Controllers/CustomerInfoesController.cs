@@ -14,7 +14,7 @@ namespace DemoNet.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CustomerInfoesController : ControllerBase
     {
         private readonly ICustomerInfoRepository _repository;
@@ -28,7 +28,8 @@ namespace DemoNet.Api.Controllers
             _mapper = mapper ?? throw new ArgumentNullException(nameof(_mapper));
         }
 
-        [HttpGet, Authorize(Roles = "Admin")]
+        //[HttpGet, Authorize(Roles = "Admin")]
+        [HttpGet]
         [ProducesResponseType(typeof(IEnumerable<VmCustomerInfo>), (int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<IEnumerable<VmCustomerInfo>>> GetCustomers()
         {
@@ -37,6 +38,7 @@ namespace DemoNet.Api.Controllers
             {
                 return NotFound("No data found");
             }
+            //return Ok(new { data = _mapper.Map<List<VmCustomerInfo>>(customers) });
             return Ok(_mapper.Map<List<VmCustomerInfo>>(customers));
         }
 
